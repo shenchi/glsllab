@@ -1,0 +1,20 @@
+{
+  "name": "glsl",
+  "version": "1.0.0",
+  "description": "experiment code",
+  "main": "index.html",
+  "dependencies": {
+    "browserify": "^14.4.0",
+    "glsl-camera-ray": "^1.0.0",
+    "glsl-noise": "0.0.0",
+    "glsl-raytrace": "^1.0.0",
+    "glsl-sdf-normal": "^1.0.0",
+    "glslify": "^6.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "cshen",
+  "license": "ISC"
+}
