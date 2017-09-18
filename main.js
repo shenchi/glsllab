@@ -1,6 +1,7 @@
 
 (function()
 {
+	let objs = require("./objects.js");
 
 	let glsl = require("glslify");
 
@@ -44,6 +45,12 @@
 		}
 	`;
 
+	let scene = new objs.SmoothUnion(
+		new objs.Sphere(new objs.Vec3(-1, 0, 0), 1.2),
+		new objs.Box(new objs.Vec3(1, 0, 0), new objs.Vec3(0.8, 0.8, 0.8)),
+		0.2
+		);
+
 	let fs_source = glsl`
 		precision highp float;
 		varying vec2 v_uv;
@@ -57,14 +64,11 @@
 		#pragma glslify: normal = require('glsl-sdf-normal', map = scene)
 		#pragma glslify: camera = require("glsl-camera-ray")
 		#pragma glslify: noise = require('glsl-noise/simplex/4d')
+		#pragma glslify: smin = require('glsl-smooth-min')
 
 		vec2 scene(vec3 p)
 		{
-			float r  = 1.0 + noise(vec4(p, time)) * 0.25;
-			float d  = length(p) - r;
-			float id = 0.0;
-
-			return vec2(d, id);
+			return vec2(${ scene.emit() }, 0.0);
 		}
 
 		void main(void)
@@ -96,8 +100,9 @@
 		if (gl.getShaderParameter(shader, gl.COMPILE_STATUS) != true)
 		{
 			let log = gl.getShaderInfoLog(shader);
-			gl.deleteShader(shader);			
+			gl.deleteShader(shader);
 
+			console.log(source);
 			console.log(log);
 
 			return null;

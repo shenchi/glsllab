@@ -9,6 +9,7 @@
     "glsl-noise": "0.0.0",
     "glsl-raytrace": "^1.0.0",
     "glsl-sdf-normal": "^1.0.0",
+    "glsl-smooth-min": "^1.0.0",
     "glslify": "^6.1.0"
   },
   "devDependencies": {},
