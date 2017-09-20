@@ -6,6 +6,7 @@
 	let glsl = require("glslify");
 
 	let label = document.getElementById("label");
+	let info = document.getElementById("info");
 
 	let canvas = document.getElementById("c");
 	let gl = canvas.getContext("webgl");
@@ -47,8 +48,9 @@
 
 	let scene = new objs.SmoothUnion(
 		new objs.Sphere(new objs.Vec3(-1, 0, 0), 1.2),
-		new objs.Box(new objs.Vec3(1, 0, 0), new objs.Vec3(0.8, 0.8, 0.8)),
-		0.2
+		new objs.Sphere(new objs.Vec3(1, 0, 0), 1.2),
+		//new objs.Box(new objs.Vec3(1, 0, 0), new objs.Vec3(0.8, 0.8, 0.8)),
+		0.8
 		);
 
 	let fs_source = glsl`
@@ -56,7 +58,7 @@
 		varying vec2 v_uv;
 
 		uniform float time;
-		uniform vec3 constants; // (canvas_width, canvas_height, 0, 0)
+		uniform vec2 resolution;
 
 		vec2 scene(vec3 p);
 
@@ -74,7 +76,7 @@
 		void main(void)
 		{
 			vec2 pos = v_uv * 2.0 - 1.0;
-			pos.x *= (constants.x / constants.y);
+			pos.x *= (resolution.x / resolution.y);
 			vec3 color = vec3(0.0);
 			vec3 ro = vec3(0, 0, 4);
 			vec3 rd = camera(ro, vec3(0, 0, 0), pos, 2.0);
@@ -139,6 +141,8 @@
 	}
 
 
+	info.innerHTML = "Max Fragment Uniform Vectors: " + gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
+
 	let program = create_program(vs_source, fs_source);
 	gl.useProgram(program);
 
@@ -146,7 +150,7 @@
 	let loc_a_uv = gl.getAttribLocation(program, "a_uv");
 
 	let loc_u_time = gl.getUniformLocation(program, "time");
-	let loc_u_constants = gl.getUniformLocation(program, "constants");
+	let loc_u_resolution = gl.getUniformLocation(program, "resolution");
 
 	gl.enableVertexAttribArray(loc_a_pos);
 	gl.enableVertexAttribArray(loc_a_uv);
@@ -154,7 +158,7 @@
 	gl.vertexAttribPointer(loc_a_pos, 3, gl.FLOAT, false, 20, 0);
 	gl.vertexAttribPointer(loc_a_uv, 2, gl.FLOAT, false, 20, 12);
 
-	gl.uniform3f(loc_u_constants, canvas.width, canvas.height, 0);
+	gl.uniform2f(loc_u_resolution, canvas.width, canvas.height);
 
 	let total_time = 0.0;
 

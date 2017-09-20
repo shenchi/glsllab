@@ -7,7 +7,14 @@ function emit_float(a) {
 		return a;
 }
 
-var Vec3 = function (x, y, z) {
+VarAlloc = {
+	current: 0,
+	alloc : function() {
+		return current++;
+	}
+};
+
+let Vec3 = function (x, y, z) {
 	this.x = x;
 	this.y = y;
 	this.z = z;
@@ -20,14 +27,14 @@ Vec3.prototype = {
 	emit: function() { return "vec3(" + this.x + "," + this.y + "," + this.z + ")"; }
 };
 
-var SceneNode = function () {}
+let SceneNode = function () {}
 
 SceneNode.prototype = {
 	emit: function() { return "#NotImplemented#"; }
 };
 
 
-var Sphere = function (c, r) {
+let Sphere = function (c, r) {
 	this.center = c;
 	this.radius = r;
 };
@@ -38,7 +45,7 @@ Sphere.prototype.emit = function () {
 	return "length(p - " + this.center.emit() + ") - " + emit_float(this.radius); 
 };
 
-var Box = function (c, s) {
+let Box = function (c, s) {
 	this.center = c;
 	this.size =  s;
 };
@@ -49,7 +56,7 @@ Box.prototype.emit = function () {
 	return "length(max(abs(p - " + this.center.emit() + ") - " + this.size.emit() + ", 0.0))";
 }
 
-var Union = function (a, b) {
+let Union = function (a, b) {
 	this.a = a;
 	this.b = b;
 };
@@ -60,7 +67,7 @@ Union.prototype.emit = function () {
 	return "min(" + this.a.emit() + ", " + this.b.emit() + ")";
 };
 
-var SmoothUnion = function (a, b, k) {
+let SmoothUnion = function (a, b, k) {
 	this.a = a;
 	this.b = b;
 	this.k = k || 0.8;
