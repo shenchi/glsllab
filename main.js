@@ -7,6 +7,7 @@
 
 	let label = document.getElementById("label");
 	let info = document.getElementById("info");
+	let output_code = document.getElementById("output_code");
 
 	let canvas = document.getElementById("c");
 	let gl = canvas.getContext("webgl");
@@ -45,11 +46,14 @@
 			gl_Position = vec4(a_pos, 1.0);
 		}
 	`;
+	
+	let obj1 = new objs.Sphere(new objs.Var(new objs.Vec3(-1, 0, 0)), 1.2);
+	let obj2 = new objs.Sphere(new objs.Vec3(1, 0, 0), new objs.Var(1.2));
+	//let obj2 = new objs.Box(new objs.Vec3(1, 0, 0), new objs.Vec3(0.8, 0.8, 0.8));
 
 	let scene = new objs.SmoothUnion(
-		new objs.Sphere(new objs.Vec3(-1, 0, 0), 1.2),
-		new objs.Sphere(new objs.Vec3(1, 0, 0), 1.2),
-		//new objs.Box(new objs.Vec3(1, 0, 0), new objs.Vec3(0.8, 0.8, 0.8)),
+		obj1,
+		obj2,
 		0.8
 		);
 
@@ -59,6 +63,8 @@
 
 		uniform float time;
 		uniform vec2 resolution;
+
+		${ scene.emit_decl() }
 
 		vec2 scene(vec3 p);
 
@@ -142,6 +148,7 @@
 
 
 	info.innerHTML = "Max Fragment Uniform Vectors: " + gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
+	output_code.value = fs_source;
 
 	let program = create_program(vs_source, fs_source);
 	gl.useProgram(program);
@@ -151,6 +158,8 @@
 
 	let loc_u_time = gl.getUniformLocation(program, "time");
 	let loc_u_resolution = gl.getUniformLocation(program, "resolution");
+
+	scene.update_location(gl, program);
 
 	gl.enableVertexAttribArray(loc_a_pos);
 	gl.enableVertexAttribArray(loc_a_uv);
@@ -169,6 +178,11 @@
 		if (label) label.innerHTML = "Time: " + total_time;
 
 		gl.uniform1f(loc_u_time, total_time);
+
+		obj1.center.set(new objs.Vec3(-1 + 0.5 * Math.sin(total_time), 0, 0));
+		obj2.radius.set(1.2 + 0.2 * Math.sin(total_time));
+
+		scene.upload_data(gl);
 
 		gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
 
