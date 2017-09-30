@@ -93,6 +93,10 @@ let Var = function(v) {
 	{
 		this.type = "vec4";
 	}
+	else
+	{
+		throw "invalid parameter";
+	}
 }
 
 Var.prototype = {
@@ -136,6 +140,37 @@ Var.prototype = {
 	}
 };
 
+// Wraper
+
+function param_wrap(v, d)
+{
+	if (v == undefined) return d();
+	if (v instanceof Var)
+		return v;
+	
+	return new Var(v);
+}
+
+function float_var_gen(x)
+{
+	return function() { return new Var(x); };
+}
+
+function vec2_var_gen(x, y)
+{
+	return function() { return new Var(new Vec2(x, y)); };
+}
+
+function vec3_var_gen(x, y, z)
+{
+	return function() { return new Var(new Vec3(x, y, z)); };
+}
+
+function vec4_var_gen(x, y, z, w)
+{
+	return function() { return new Var(new Vec2(x, y, z, w)); };
+}
+
 // SceneNode
 
 let SceneNode = function () {}
@@ -153,17 +188,14 @@ SceneNode.prototype = {
 // Sphere
 
 let Sphere = function (c, r) {
-	this.center = c;
-	if (r instanceof Var)
-		this.radius = r;
-	else
-		this.radius = new Float(r);
+	this.center = param_wrap(c, vec3_var_gen(0.0, 0.0, 0.0));
+	this.radius = param_wrap(r, float_var_gen(1.0));
 };
 
 Sphere.prototype = new SceneNode();
 
 Sphere.prototype.emit = function () {
-	return "length(p - " + this.center.emit() + ") - " + this.radius.emit(); 
+	return "sdSphere(p - " + this.center.emit() + ", " + this.radius.emit() + ")"; 
 };
 
 Sphere.prototype.emit_decl = function() {
@@ -171,26 +203,127 @@ Sphere.prototype.emit_decl = function() {
 }
 
 Sphere.prototype.update_location = function(gl, program) {
-	if (this.center instanceof Var) this.center.update_location(gl, program);
-	if (this.radius instanceof Var) this.radius.update_location(gl, program);
+	this.center.update_location(gl, program);
+	this.radius.update_location(gl, program);
 }
 
 Sphere.prototype.upload_data = function(gl) {
-	if (this.center instanceof Var) this.center.upload_data(gl);
-	if (this.radius instanceof Var) this.radius.upload_data(gl);
+	this.center.upload_data(gl);
+	this.radius.upload_data(gl);
 }
 
 // Box
 
 let Box = function (c, s) {
-	this.center = c;
-	this.size =  s;
+	this.center = param_wrap(c, vec3_var_gen(0.0, 0.0, 0.0));
+	this.size =  param_wrap(s, vec3_var_gen(1.0, 1.0, 1.0));
 };
 
 Box.prototype = new SceneNode();
 
 Box.prototype.emit = function () {
-	return "length(max(abs(p - " + this.center.emit() + ") - " + this.size.emit() + ", 0.0))";
+	return "sdBox(p - " + this.center.emit() + ", " + this.size.emit() + ")";
+}
+
+Box.prototype.emit_decl = function() {
+	return this.center.emit_decl() + this.size.emit_decl();
+}
+
+Box.prototype.update_location = function(gl, program) {
+	this.center.update_location(gl, program);
+	this.size.update_location(gl, program);
+}
+
+Box.prototype.upload_data = function(gl) {
+	this.center.upload_data(gl);
+	this.size.upload_data(gl);
+}
+
+// RoundBox
+
+let RoundBox = function (c, s, r) {
+	this.center = param_wrap(c, vec3_var_gen(0.0, 0.0, 0.0));
+	this.size =  param_wrap(s, vec3_var_gen(1.0, 1.0, 1.0));
+	this.radius = param_wrap(r, float_var_gen(0.1));
+};
+
+RoundBox.prototype = new SceneNode();
+
+RoundBox.prototype.emit = function () {
+	return "udRoundBox(p - " + this.center.emit() + ", " + this.size.emit() + ", " + this.radius.emit() + ")";
+}
+
+RoundBox.prototype.emit_decl = function() {
+	return this.center.emit_decl() + this.size.emit_decl() + this.radius.emit_decl();
+}
+
+RoundBox.prototype.update_location = function(gl, program) {
+	this.center.update_location(gl, program);
+	this.size.update_location(gl, program);
+	this.radius.update_location(gl, program);
+}
+
+RoundBox.prototype.upload_data = function(gl) {
+	this.center.upload_data(gl);
+	this.size.upload_data(gl);
+	this.radius.upload_data(gl);
+}
+
+// Torus
+
+let Torus = function (c, r) {
+	this.center = param_wrap(c, vec3_var_gen(0.0, 0.0, 0.0));
+	this.radii =  param_wrap(r, vec2_var_gen(0.2, 0.05));
+};
+
+Torus.prototype = new SceneNode();
+
+Torus.prototype.emit = function () {
+	return "sdTorus(p - " + this.center.emit() + ", " + this.radii.emit() + ")";
+}
+
+Torus.prototype.emit_decl = function() {
+	return this.center.emit_decl() + this.radii.emit_decl();
+}
+
+Torus.prototype.update_location = function(gl, program) {
+	this.center.update_location(gl, program);
+	this.radii.update_location(gl, program);
+}
+
+Torus.prototype.upload_data = function(gl) {
+	this.center.upload_data(gl);
+	this.radii.upload_data(gl);
+}
+
+// Capsule
+
+let Capsule = function (st, ed, r) {
+	this.start = param_wrap(st, vec3_var_gen(0.0, 0.0, 0.0));
+	this.end = param_wrap(ed, vec3_var_gen(0.0, 1.0, 0.0));
+	this.radius = param_wrap(r, float_var_gen(0.5));
+};
+
+Capsule.prototype = new SceneNode();
+
+Capsule.prototype.emit = function () {
+	return "sdCapsule(p, " + this.start.emit() + ", " + this.end.emit() + ", " + this.radius.emit() + ")";
+};
+
+Capsule.prototype.emit_decl = function() {
+	return this.start.emit_decl() + this.end.emit_decl() + this.radius.emit_decl();
+}
+
+Capsule.prototype.update_location = function(gl, program) {
+	this.start.update_location(gl, program);
+	this.end.update_location(gl, program);
+	this.radius.update_location(gl, program);
+}
+
+Capsule.prototype.upload_data = function(gl) {
+	this.start.upload_data(gl);
+	this.end.upload_data(gl);
+	this.radius.upload_data(gl);
 }
 
 // Union
@@ -225,10 +358,7 @@ Union.prototype.upload_data = function(gl) {
 let SmoothUnion = function (a, b, k) {
 	this.a = a;
 	this.b = b;
-	if (k instanceof Var)
-		this.k = k;
-	else
-		this.k = new Float(k || 0.8);
+	this.k = param_wrap(k, float_var_gen(0.8));
 };
 
 SmoothUnion.prototype = new SceneNode();
@@ -244,13 +374,13 @@ SmoothUnion.prototype.emit_decl = function () {
 SmoothUnion.prototype.update_location = function(gl, program) {
 	this.a.update_location(gl, program);
 	this.b.update_location(gl, program);
-	if (this.k instanceof Var) this.k.update_location(gl, program);
+	this.k.update_location(gl, program);
 }
 
 SmoothUnion.prototype.upload_data = function(gl) {
 	this.a.upload_data(gl);
 	this.b.upload_data(gl);
-	if (this.k instanceof Var) this.k.upload_data(gl);
+	this.k.upload_data(gl);
 }
 
 // exports
@@ -263,6 +393,9 @@ module.exports = {
 	SceneNode: SceneNode,
 	Sphere: Sphere,
 	Box: Box,
+	RoundBox: RoundBox,
+	Torus: Torus,
+	Capsule: Capsule,
 	Union: Union,
 	SmoothUnion: SmoothUnion
 };

@@ -47,15 +47,12 @@
 		}
 	`;
 	
-	let obj1 = new objs.Sphere(new objs.Var(new objs.Vec3(-1, 0, 0)), 1.2);
-	let obj2 = new objs.Sphere(new objs.Vec3(1, 0, 0), new objs.Var(1.2));
-	//let obj2 = new objs.Box(new objs.Vec3(1, 0, 0), new objs.Vec3(0.8, 0.8, 0.8));
+	let obj1 = new objs.Sphere(new objs.Vec3(-1, 0, 0), 1.2);
+	//let obj2 = new objs.Sphere(new objs.Vec3(1, 0, 0), 1.2);
+	//let obj2 = new objs.RoundBox(new objs.Vec3(1, 0, 0), new objs.Vec3(0.8, 0.8, 0.8), 0.1);
+	let obj2 = new objs.Capsule(new objs.Vec3(1, 0, 0), new objs.Vec3(1, 1, 0));
 
-	let scene = new objs.SmoothUnion(
-		obj1,
-		obj2,
-		0.8
-		);
+	let scene = new objs.SmoothUnion(obj1, obj2);
 
 	let fs_source = glsl`
 		precision highp float;
@@ -73,6 +70,19 @@
 		#pragma glslify: camera = require("glsl-camera-ray")
 		#pragma glslify: noise = require('glsl-noise/simplex/4d')
 		#pragma glslify: smin = require('glsl-smooth-min')
+
+		// PRIMITIVES
+		#pragma glslify: sdPlane	= require('glsl-sdf-primitives/sdPlane')
+		#pragma glslify: sdBox		= require('glsl-sdf-primitives/sdBox')
+		#pragma glslify: udRoundBox = require('glsl-sdf-primitives/udRoundBox'	)
+		#pragma glslify: sdTorus 	= require('glsl-sdf-primitives/sdTorus')
+		#pragma glslify: sdCapsule	= require('glsl-sdf-primitives/sdCapsule')
+		#pragma glslify: sdTriPrism = require('glsl-sdf-primitives/sdTriPrism')
+		#pragma glslify: sdHexPrism	= require('glsl-sdf-primitives/sdHexPrism')
+		#pragma glslify: sdSphere	= require('glsl-sdf-primitives/sdSphere')
+		#pragma glslify: udTriangle	= require('glsl-sdf-primitives/udTriangle')
+		#pragma glslify: sdCone		= require('glsl-sdf-primitives/sdCappedCone')
+		#pragma glslify: sdCylinder	= require('glsl-sdf-primitives/sdCappedCylinder')
 
 		vec2 scene(vec3 p)
 		{
@@ -180,7 +190,7 @@
 		gl.uniform1f(loc_u_time, total_time);
 
 		obj1.center.set(new objs.Vec3(-1 + 0.5 * Math.sin(total_time), 0, 0));
-		obj2.radius.set(1.2 + 0.2 * Math.sin(total_time));
+		obj2.radius.set(0.2 + 0.1 * Math.sin(total_time));
 
 		scene.upload_data(gl);
 
