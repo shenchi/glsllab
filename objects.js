@@ -326,6 +326,268 @@ Capsule.prototype.upload_data = function(gl) {
 	this.radius.upload_data(gl);
 }
 
+// Plane
+
+let Plane = function (n, d) {
+	this.normal = param_wrap(n, vec3_var_gen(0.0, 1.0, 0.0));
+	this.distance = param_wrap(d, float_var_gen(0.0));
+};
+
+Plane.prototype = new SceneNode();
+
+Plane.prototype.emit = function () {
+	return "sdPlane(p, vec4(" + this.normal.emit() + ", " + this.distance.emit() + "))";
+}
+
+Plane.prototype.emit_decl = function() {
+	return this.normal.emit_decl() + this.distance.emit_decl();
+}
+
+Plane.prototype.update_location = function(gl, program) {
+	this.normal.update_location(gl, program);
+	this.distance.update_location(gl, program);
+}
+
+Plane.prototype.upload_data = function(gl) {
+	this.normal.upload_data(gl);
+	this.distance.upload_data(gl);
+}
+
+// Cone
+
+let Cone = function (p, d) {
+	this.position = param_wrap(p, vec3_var_gen(0.0, 0.0, 0.0));
+	this.dimension = param_wrap(d, vec3_var_gen(0.8, 0.6, 0.3));
+};
+
+Cone.prototype = new SceneNode();
+
+Cone.prototype.emit = function () {
+	return "sdCone(p - " + this.position.emit() + ", " + this.dimension.emit() + ")";
+}
+
+Cone.prototype.emit_decl = function() {
+	return this.position.emit_decl() + this.dimension.emit_decl();
+}
+
+Cone.prototype.update_location = function(gl, program) {
+	this.position.update_location(gl, program);
+	this.dimension.update_location(gl, program);
+}
+
+Cone.prototype.upload_data = function(gl) {
+	this.position.upload_data(gl);
+	this.dimension.upload_data(gl);
+}
+
+// Cylinder
+
+let Cylinder = function (p, d) {
+	this.position = param_wrap(p, vec3_var_gen(0.0, 0.0, 0.0));
+	this.dimension = param_wrap(d, vec2_var_gen(0.1, 0.2));
+};
+
+Cylinder.prototype = new SceneNode();
+
+Cylinder.prototype.emit = function () {
+	return "sdCylinder(p - " + this.position.emit() + ", " + this.dimension.emit() + ")";
+}
+
+Cylinder.prototype.emit_decl = function() {
+	return this.position.emit_decl() + this.dimension.emit_decl();
+}
+
+Cylinder.prototype.update_location = function(gl, program) {
+	this.position.update_location(gl, program);
+	this.dimension.update_location(gl, program);
+}
+
+Cylinder.prototype.upload_data = function(gl) {
+	this.position.upload_data(gl);
+	this.dimension.upload_data(gl);
+}
+
+
+// CappedCone
+
+let CappedCone = function (p, d) {
+	this.position = param_wrap(p, vec3_var_gen(0.0, 0.0, 0.0));
+	this.dimension = param_wrap(d, vec3_var_gen(0.8, 0.6, 0.3));
+};
+
+CappedCone.prototype = new SceneNode();
+
+CappedCone.prototype.emit = function () {
+	return "sdCappedCone(p - " + this.position.emit() + ", " + this.dimension.emit() + ")";
+}
+
+CappedCone.prototype.emit_decl = function() {
+	return this.position.emit_decl() + this.dimension.emit_decl();
+}
+
+CappedCone.prototype.update_location = function(gl, program) {
+	this.position.update_location(gl, program);
+	this.dimension.update_location(gl, program);
+}
+
+CappedCone.prototype.upload_data = function(gl) {
+	this.position.upload_data(gl);
+	this.dimension.upload_data(gl);
+}
+
+// CappedCylinder
+
+let CappedCylinder = function (p, d) {
+	this.position = param_wrap(p, vec3_var_gen(0.0, 0.0, 0.0));
+	this.dimension = param_wrap(d, vec2_var_gen(0.1, 0.2));
+};
+
+CappedCylinder.prototype = new SceneNode();
+
+CappedCylinder.prototype.emit = function () {
+	return "sdCappedCylinder(p - " + this.position.emit() + ", " + this.dimension.emit() + ")";
+}
+
+CappedCylinder.prototype.emit_decl = function() {
+	return this.position.emit_decl() + this.dimension.emit_decl();
+}
+
+CappedCylinder.prototype.update_location = function(gl, program) {
+	this.position.update_location(gl, program);
+	this.dimension.update_location(gl, program);
+}
+
+CappedCylinder.prototype.upload_data = function(gl) {
+	this.position.upload_data(gl);
+	this.dimension.upload_data(gl);
+}
+
+
+// HexPrism
+
+let HexPrism = function (p, d) {
+	this.position = param_wrap(p, vec3_var_gen(0.0, 0.0, 0.0));
+	this.dimension = param_wrap(d, vec2_var_gen(0.1, 0.2));
+};
+
+HexPrism.prototype = new SceneNode();
+
+HexPrism.prototype.emit = function () {
+	return "sdHexPrism(p - " + this.position.emit() + ", " + this.dimension.emit() + ")";
+}
+
+HexPrism.prototype.emit_decl = function() {
+	return this.position.emit_decl() + this.dimension.emit_decl();
+}
+
+HexPrism.prototype.update_location = function(gl, program) {
+	this.position.update_location(gl, program);
+	this.dimension.update_location(gl, program);
+}
+
+HexPrism.prototype.upload_data = function(gl) {
+	this.position.upload_data(gl);
+	this.dimension.upload_data(gl);
+}
+
+
+// TriPrism
+
+let TriPrism = function (p, d) {
+	this.position = param_wrap(p, vec3_var_gen(0.0, 0.0, 0.0));
+	this.dimension = param_wrap(d, vec2_var_gen(0.1, 0.2));
+};
+
+TriPrism.prototype = new SceneNode();
+
+TriPrism.prototype.emit = function () {
+	return "sdTriPrism(p - " + this.position.emit() + ", " + this.dimension.emit() + ")";
+}
+
+TriPrism.prototype.emit_decl = function() {
+	return this.position.emit_decl() + this.dimension.emit_decl();
+}
+
+TriPrism.prototype.update_location = function(gl, program) {
+	this.position.update_location(gl, program);
+	this.dimension.update_location(gl, program);
+}
+
+TriPrism.prototype.upload_data = function(gl) {
+	this.position.upload_data(gl);
+	this.dimension.upload_data(gl);
+}
+
+
+// Quad
+
+let Quad = function (p, a, b, c, d) {
+	this.position = param_wrap(p, vec3_var_gen(0.0, 0.0, 0.0));
+	this.v1 = param_wrap(a, vec3_var_gen(-0.2, -0.2, 0));
+	this.v2 = param_wrap(b, vec3_var_gen( 0.2, -0.2, 0));
+	this.v3 = param_wrap(c, vec3_var_gen( 0.2,  0.2, 0));
+	this.v4 = param_wrap(d, vec3_var_gen(-0.2,  0.2, 0));
+};
+
+Quad.prototype = new SceneNode();
+
+Quad.prototype.emit = function () {
+	return "udQuad(p - " + this.position.emit() + ", " + this.v1.emit() + ", " + this.v2.emit() + ", " + this.v3.emit() + ", " + this.v4.emit() + ")";
+}
+
+Quad.prototype.emit_decl = function() {
+	return this.position.emit_decl() + this.v1.emit_decl() + this.v2.emit_decl() + this.v3.emit_decl() + this.v4.emit_decl();
+}
+
+Quad.prototype.update_location = function(gl, program) {
+	this.position.update_location(gl, program);
+	this.v1.update_location(gl, program);
+	this.v2.update_location(gl, program);
+	this.v3.update_location(gl, program);
+	this.v4.update_location(gl, program);
+}
+
+Quad.prototype.upload_data = function(gl) {
+	this.position.upload_data(gl);
+	this.v1.upload_data(gl);
+	this.v2.upload_data(gl);
+	this.v3.upload_data(gl);
+	this.v4.upload_data(gl);
+}
+
+// Triangle
+
+let Triangle = function (p, a, b, c) {
+	this.position = param_wrap(p, vec3_var_gen(0.0, 0.0, 0.0));
+	this.v1 = param_wrap(a, vec3_var_gen( 0.0,  0.2, 0));
+	this.v2 = param_wrap(b, vec3_var_gen(-0.2,  0.0, 0));
+	this.v3 = param_wrap(c, vec3_var_gen( 0.2,  0.0, 0));
+};
+
+Triangle.prototype = new SceneNode();
+
+Triangle.prototype.emit = function () {
+	return "udTriangle(p - " + this.position.emit() + ", " + this.v1.emit() + ", " + this.v2.emit() + ", " + this.v3.emit() + ")";
+}
+
+Triangle.prototype.emit_decl = function() {
+	return this.position.emit_decl() + this.v1.emit_decl() + this.v2.emit_decl() + this.v3.emit_decl();
+}
+
+Triangle.prototype.update_location = function(gl, program) {
+	this.position.update_location(gl, program);
+	this.v1.update_location(gl, program);
+	this.v2.update_location(gl, program);
+	this.v3.update_location(gl, program);
+}
+
+Triangle.prototype.upload_data = function(gl) {
+	this.position.upload_data(gl);
+	this.v1.upload_data(gl);
+	this.v2.upload_data(gl);
+	this.v3.upload_data(gl);
+}
+
 // Union
 
 let Union = function (a, b) {
@@ -396,6 +658,15 @@ module.exports = {
 	RoundBox: RoundBox,
 	Torus: Torus,
 	Capsule: Capsule,
+	Plane: Plane,
+	Cone: Cone,
+	Cylinder: Cylinder,
+	CappedCone: CappedCone,
+	CappedCylinder: CappedCylinder,
+	HexPrism: HexPrism,
+	TriPrism: TriPrism,
+	Quad: Quad,
+	Triangle: Triangle,
 	Union: Union,
 	SmoothUnion: SmoothUnion
 };

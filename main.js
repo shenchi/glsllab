@@ -51,8 +51,10 @@
 	//let obj2 = new objs.Sphere(new objs.Vec3(1, 0, 0), 1.2);
 	//let obj2 = new objs.RoundBox(new objs.Vec3(1, 0, 0), new objs.Vec3(0.8, 0.8, 0.8), 0.1);
 	let obj2 = new objs.Capsule(new objs.Vec3(1, 0, 0), new objs.Vec3(1, 1, 0));
+	let ground = new objs.Plane(new objs.Vec3(0, 1, 0), 1.0);
+	//let ground = new objs.RoundBox(new objs.Vec3(1, 0, 0), new objs.Vec3(0.8, 0.8, 0.8), 0.1);
 
-	let scene = new objs.SmoothUnion(obj1, obj2);
+	let scene = new objs.Union(new objs.SmoothUnion(obj1, obj2), ground);
 
 	let fs_source = glsl`
 		precision highp float;
@@ -74,19 +76,54 @@
 		// PRIMITIVES
 		#pragma glslify: sdPlane	= require('glsl-sdf-primitives/sdPlane')
 		#pragma glslify: sdBox		= require('glsl-sdf-primitives/sdBox')
-		#pragma glslify: udRoundBox = require('glsl-sdf-primitives/udRoundBox'	)
+		#pragma glslify: udRoundBox = require('glsl-sdf-primitives/udRoundBox')
 		#pragma glslify: sdTorus 	= require('glsl-sdf-primitives/sdTorus')
 		#pragma glslify: sdCapsule	= require('glsl-sdf-primitives/sdCapsule')
 		#pragma glslify: sdTriPrism = require('glsl-sdf-primitives/sdTriPrism')
 		#pragma glslify: sdHexPrism	= require('glsl-sdf-primitives/sdHexPrism')
 		#pragma glslify: sdSphere	= require('glsl-sdf-primitives/sdSphere')
+		#pragma glslify: udQuad		= require('glsl-sdf-primitives/udQuad')
 		#pragma glslify: udTriangle	= require('glsl-sdf-primitives/udTriangle')
-		#pragma glslify: sdCone		= require('glsl-sdf-primitives/sdCappedCone')
-		#pragma glslify: sdCylinder	= require('glsl-sdf-primitives/sdCappedCylinder')
+		#pragma glslify: sdCone		= require('glsl-sdf-primitives/sdCone')
+		#pragma glslify: sdCylinder	= require('glsl-sdf-primitives/sdCylinder')
+		#pragma glslify: sdCappedCone		= require('glsl-sdf-primitives/sdCappedCone')
+		#pragma glslify: sdCappedCylinder	= require('glsl-sdf-primitives/sdCappedCylinder')
+
+		// OPS
+		#pragma glslify: opU = require('glsl-sdf-ops/union' )
+		#pragma glslify: calcAO = require('glsl-sdf-ops/ao', map = scene )
+		#pragma glslify: softshadow = require('glsl-sdf-ops/softshadow', map = scene )
 
 		vec2 scene(vec3 p)
 		{
 			return vec2(${ scene.emit() }, 0.0);
+		}
+
+		vec3 lighting( vec3 pos, vec3 nor, vec3 ro, vec3 rd) {
+
+			vec3  ref = reflect( rd, nor );
+			float occ = calcAO( pos, nor );
+			vec3  lig = normalize( vec3(-0.6, 0.7, -0.5) );
+			float amb = clamp( 0.5+0.5*nor.y, 0.0, 1.0 );
+			float dif = clamp( dot( nor, lig ), 0.0, 1.0 );
+			float bac = clamp( dot( nor, normalize(vec3(-lig.x,0.0,-lig.z))), 0.0, 1.0 )*clamp( 1.0-pos.y,0.0,1.0);
+			float dom = smoothstep( -0.1, 0.1, ref.y );
+			float fre = pow( clamp(1.0+dot(nor,rd),0.0,1.0), 2.0 );
+			float spe = pow(clamp( dot( ref, lig ), 0.0, 1.0 ),16.0);
+
+			dif *= softshadow( pos, lig, 0.02, 2.5 );
+			dom *= softshadow( pos, ref, 0.02, 2.5 );
+
+			vec3 brdf = vec3(0.0);
+			brdf += 1.20 * dif * vec3(1.00,0.90,0.60);
+			brdf += 1.20 * spe * vec3(1.00,0.90,0.60) * dif;
+			brdf += 0.30 * amb * vec3(0.50,0.70,1.00) * occ;
+			brdf += 0.40 * dom * vec3(0.50,0.70,1.00) * occ;
+			brdf += 0.30 * bac * vec3(0.25,0.25,0.25) * occ;
+			brdf += 0.40 * fre * vec3(1.00,1.00,1.00) * occ;
+			brdf += 0.02;
+
+			return brdf;
 		}
 
 		void main(void)
@@ -103,7 +140,7 @@
 				vec3 pos = ro + rd * t.x;
 				vec3 nor = normal(pos);
 
-				color = nor * 0.5 + 0.5;
+				color = lighting(pos, nor, ro, rd);
 			}
 
 			gl_FragColor = vec4(color, 1.0);
