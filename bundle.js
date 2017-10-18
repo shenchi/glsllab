@@ -782,6 +782,56 @@ Union.prototype.upload_data = function(gl) {
 	this.b.upload_data(gl);
 }
 
+// Intersection
+
+let Intersection = function (a, b) {
+	this.a = a;
+	this.b = b;
+};
+
+Intersection.prototype.emit = function () {
+	return "max(" + this.a.emit() + ", " + this.b.emit() + ")";
+}
+
+Intersection.prototype.emit_decl = function () {
+	return this.a.emit_decl() + this.b.emit_decl();
+};
+
+Intersection.prototype.update_location = function(gl, program) {
+	this.a.update_location(gl, program);
+	this.b.update_location(gl, program);
+}
+
+Intersection.prototype.upload_data = function(gl) {
+	this.a.upload_data(gl);
+	this.b.upload_data(gl);
+}
+
+// Substraction
+
+let Substraction = function (a, b) {
+	this.a = a;
+	this.b = b;
+};
+
+Substraction.prototype.emit = function () {
+	return "max(-" + this.a.emit() + ", " + this.b.emit() + ")";
+}
+
+Substraction.prototype.emit_decl = function () {
+	return this.a.emit_decl() + this.b.emit_decl();
+};
+
+Substraction.prototype.update_location = function(gl, program) {
+	this.a.update_location(gl, program);
+	this.b.update_location(gl, program);
+}
+
+Substraction.prototype.upload_data = function(gl) {
+	this.a.upload_data(gl);
+	this.b.upload_data(gl);
+}
+
 // SmoothUnion
 
 let SmoothUnion = function (a, b, k) {
@@ -835,6 +885,8 @@ module.exports = {
 	Quad: Quad,
 	Triangle: Triangle,
 	Union: Union,
+	Intersection: Intersection,
+	Substraction: Substraction,
 	SmoothUnion: SmoothUnion
 };
 },{}]},{},[1]);
