@@ -14,6 +14,13 @@ VarAlloc = {
 	}
 };
 
+MaterialIDAlloc = {
+	current: 0,
+	alloc : function() {
+		return MaterialIDAlloc.current++;
+	}
+};
+
 let Float = function (x) {
 	this.x = x;
 }
@@ -190,12 +197,13 @@ SceneNode.prototype = {
 let Sphere = function (c, r) {
 	this.center = param_wrap(c, vec3_var_gen(0.0, 0.0, 0.0));
 	this.radius = param_wrap(r, float_var_gen(1.0));
+	this.matId = MaterialIDAlloc.alloc();
 };
 
 Sphere.prototype = new SceneNode();
 
 Sphere.prototype.emit = function () {
-	return "sdSphere(p - " + this.center.emit() + ", " + this.radius.emit() + ")"; 
+	return "vec2(sdSphere(p - " + this.center.emit() + ", " + this.radius.emit() + "), " + this.matId + ")"; 
 };
 
 Sphere.prototype.emit_decl = function() {
@@ -217,12 +225,13 @@ Sphere.prototype.upload_data = function(gl) {
 let Box = function (c, s) {
 	this.center = param_wrap(c, vec3_var_gen(0.0, 0.0, 0.0));
 	this.size =  param_wrap(s, vec3_var_gen(1.0, 1.0, 1.0));
+	this.matId = MaterialIDAlloc.alloc();
 };
 
 Box.prototype = new SceneNode();
 
 Box.prototype.emit = function () {
-	return "sdBox(p - " + this.center.emit() + ", " + this.size.emit() + ")";
+	return "vec2(sdBox(p - " + this.center.emit() + ", " + this.size.emit() + "), " + this.matId + ")";
 }
 
 Box.prototype.emit_decl = function() {
@@ -245,12 +254,13 @@ let RoundBox = function (c, s, r) {
 	this.center = param_wrap(c, vec3_var_gen(0.0, 0.0, 0.0));
 	this.size =  param_wrap(s, vec3_var_gen(1.0, 1.0, 1.0));
 	this.radius = param_wrap(r, float_var_gen(0.1));
+	this.matId = MaterialIDAlloc.alloc();
 };
 
 RoundBox.prototype = new SceneNode();
 
 RoundBox.prototype.emit = function () {
-	return "udRoundBox(p - " + this.center.emit() + ", " + this.size.emit() + ", " + this.radius.emit() + ")";
+	return "vec2(udRoundBox(p - " + this.center.emit() + ", " + this.size.emit() + ", " + this.radius.emit() + "), " + this.matId + ")";
 }
 
 RoundBox.prototype.emit_decl = function() {
@@ -274,12 +284,13 @@ RoundBox.prototype.upload_data = function(gl) {
 let Torus = function (c, r) {
 	this.center = param_wrap(c, vec3_var_gen(0.0, 0.0, 0.0));
 	this.radii =  param_wrap(r, vec2_var_gen(0.2, 0.05));
+	this.matId = MaterialIDAlloc.alloc();
 };
 
 Torus.prototype = new SceneNode();
 
 Torus.prototype.emit = function () {
-	return "sdTorus(p - " + this.center.emit() + ", " + this.radii.emit() + ")";
+	return "vec2(sdTorus(p - " + this.center.emit() + ", " + this.radii.emit() + "), " + this.matId + ")";
 }
 
 Torus.prototype.emit_decl = function() {
@@ -302,12 +313,13 @@ let Capsule = function (st, ed, r) {
 	this.start = param_wrap(st, vec3_var_gen(0.0, 0.0, 0.0));
 	this.end = param_wrap(ed, vec3_var_gen(0.0, 1.0, 0.0));
 	this.radius = param_wrap(r, float_var_gen(0.5));
+	this.matId = MaterialIDAlloc.alloc();
 };
 
 Capsule.prototype = new SceneNode();
 
 Capsule.prototype.emit = function () {
-	return "sdCapsule(p, " + this.start.emit() + ", " + this.end.emit() + ", " + this.radius.emit() + ")";
+	return "vec2(sdCapsule(p, " + this.start.emit() + ", " + this.end.emit() + ", " + this.radius.emit() + "), " + this.matId + ")";
 };
 
 Capsule.prototype.emit_decl = function() {
@@ -331,12 +343,13 @@ Capsule.prototype.upload_data = function(gl) {
 let Plane = function (n, d) {
 	this.normal = param_wrap(n, vec3_var_gen(0.0, 1.0, 0.0));
 	this.distance = param_wrap(d, float_var_gen(0.0));
+	this.matId = MaterialIDAlloc.alloc();
 };
 
 Plane.prototype = new SceneNode();
 
 Plane.prototype.emit = function () {
-	return "sdPlane(p, vec4(" + this.normal.emit() + ", " + this.distance.emit() + "))";
+	return "vec2(sdPlane(p, vec4(" + this.normal.emit() + ", " + this.distance.emit() + ")), " + this.matId + ")";
 }
 
 Plane.prototype.emit_decl = function() {
@@ -358,12 +371,13 @@ Plane.prototype.upload_data = function(gl) {
 let Cone = function (p, d) {
 	this.position = param_wrap(p, vec3_var_gen(0.0, 0.0, 0.0));
 	this.dimension = param_wrap(d, vec3_var_gen(0.8, 0.6, 0.3));
+	this.matId = MaterialIDAlloc.alloc();
 };
 
 Cone.prototype = new SceneNode();
 
 Cone.prototype.emit = function () {
-	return "sdCone(p - " + this.position.emit() + ", " + this.dimension.emit() + ")";
+	return "vec2(sdCone(p - " + this.position.emit() + ", " + this.dimension.emit() + "), " + this.matId + ")";
 }
 
 Cone.prototype.emit_decl = function() {
@@ -385,12 +399,13 @@ Cone.prototype.upload_data = function(gl) {
 let Cylinder = function (p, d) {
 	this.position = param_wrap(p, vec3_var_gen(0.0, 0.0, 0.0));
 	this.dimension = param_wrap(d, vec2_var_gen(0.1, 0.2));
+	this.matId = MaterialIDAlloc.alloc();
 };
 
 Cylinder.prototype = new SceneNode();
 
 Cylinder.prototype.emit = function () {
-	return "sdCylinder(p - " + this.position.emit() + ", " + this.dimension.emit() + ")";
+	return "vec2(sdCylinder(p - " + this.position.emit() + ", " + this.dimension.emit() + "), " + this.matId + ")";
 }
 
 Cylinder.prototype.emit_decl = function() {
@@ -413,12 +428,13 @@ Cylinder.prototype.upload_data = function(gl) {
 let CappedCone = function (p, d) {
 	this.position = param_wrap(p, vec3_var_gen(0.0, 0.0, 0.0));
 	this.dimension = param_wrap(d, vec3_var_gen(0.8, 0.6, 0.3));
+	this.matId = MaterialIDAlloc.alloc();
 };
 
 CappedCone.prototype = new SceneNode();
 
 CappedCone.prototype.emit = function () {
-	return "sdCappedCone(p - " + this.position.emit() + ", " + this.dimension.emit() + ")";
+	return "vec2(sdCappedCone(p - " + this.position.emit() + ", " + this.dimension.emit() + "), " + this.matId + ")";
 }
 
 CappedCone.prototype.emit_decl = function() {
@@ -440,12 +456,13 @@ CappedCone.prototype.upload_data = function(gl) {
 let CappedCylinder = function (p, d) {
 	this.position = param_wrap(p, vec3_var_gen(0.0, 0.0, 0.0));
 	this.dimension = param_wrap(d, vec2_var_gen(0.1, 0.2));
+	this.matId = MaterialIDAlloc.alloc();
 };
 
 CappedCylinder.prototype = new SceneNode();
 
 CappedCylinder.prototype.emit = function () {
-	return "sdCappedCylinder(p - " + this.position.emit() + ", " + this.dimension.emit() + ")";
+	return "vec2(sdCappedCylinder(p - " + this.position.emit() + ", " + this.dimension.emit() + "), " + this.matId + ")";
 }
 
 CappedCylinder.prototype.emit_decl = function() {
@@ -468,12 +485,13 @@ CappedCylinder.prototype.upload_data = function(gl) {
 let HexPrism = function (p, d) {
 	this.position = param_wrap(p, vec3_var_gen(0.0, 0.0, 0.0));
 	this.dimension = param_wrap(d, vec2_var_gen(0.1, 0.2));
+	this.matId = MaterialIDAlloc.alloc();
 };
 
 HexPrism.prototype = new SceneNode();
 
 HexPrism.prototype.emit = function () {
-	return "sdHexPrism(p - " + this.position.emit() + ", " + this.dimension.emit() + ")";
+	return "vec2(sdHexPrism(p - " + this.position.emit() + ", " + this.dimension.emit() + "), " + this.matId + ")";
 }
 
 HexPrism.prototype.emit_decl = function() {
@@ -496,12 +514,13 @@ HexPrism.prototype.upload_data = function(gl) {
 let TriPrism = function (p, d) {
 	this.position = param_wrap(p, vec3_var_gen(0.0, 0.0, 0.0));
 	this.dimension = param_wrap(d, vec2_var_gen(0.1, 0.2));
+	this.matId = MaterialIDAlloc.alloc();
 };
 
 TriPrism.prototype = new SceneNode();
 
 TriPrism.prototype.emit = function () {
-	return "sdTriPrism(p - " + this.position.emit() + ", " + this.dimension.emit() + ")";
+	return "vec2(sdTriPrism(p - " + this.position.emit() + ", " + this.dimension.emit() + "), " + this.matId + ")";
 }
 
 TriPrism.prototype.emit_decl = function() {
@@ -527,12 +546,13 @@ let Quad = function (p, a, b, c, d) {
 	this.v2 = param_wrap(b, vec3_var_gen( 0.2, -0.2, 0));
 	this.v3 = param_wrap(c, vec3_var_gen( 0.2,  0.2, 0));
 	this.v4 = param_wrap(d, vec3_var_gen(-0.2,  0.2, 0));
+	this.matId = MaterialIDAlloc.alloc();
 };
 
 Quad.prototype = new SceneNode();
 
 Quad.prototype.emit = function () {
-	return "udQuad(p - " + this.position.emit() + ", " + this.v1.emit() + ", " + this.v2.emit() + ", " + this.v3.emit() + ", " + this.v4.emit() + ")";
+	return "vec2(udQuad(p - " + this.position.emit() + ", " + this.v1.emit() + ", " + this.v2.emit() + ", " + this.v3.emit() + ", " + this.v4.emit() + "), " + this.matId + ")";
 }
 
 Quad.prototype.emit_decl = function() {
@@ -562,12 +582,13 @@ let Triangle = function (p, a, b, c) {
 	this.v1 = param_wrap(a, vec3_var_gen( 0.0,  0.2, 0));
 	this.v2 = param_wrap(b, vec3_var_gen(-0.2,  0.0, 0));
 	this.v3 = param_wrap(c, vec3_var_gen( 0.2,  0.0, 0));
+	this.matId = MaterialIDAlloc.alloc();
 };
 
 Triangle.prototype = new SceneNode();
 
 Triangle.prototype.emit = function () {
-	return "udTriangle(p - " + this.position.emit() + ", " + this.v1.emit() + ", " + this.v2.emit() + ", " + this.v3.emit() + ")";
+	return "vec2(udTriangle(p - " + this.position.emit() + ", " + this.v1.emit() + ", " + this.v2.emit() + ", " + this.v3.emit() + "), " + this.matId + ")";
 }
 
 Triangle.prototype.emit_decl = function() {
@@ -598,7 +619,7 @@ let Union = function (a, b) {
 Union.prototype = new SceneNode();
 
 Union.prototype.emit = function () {
-	return "min(" + this.a.emit() + ", " + this.b.emit() + ")";
+	return "opU(" + this.a.emit() + ", " + this.b.emit() + ")";
 };
 
 Union.prototype.emit_decl = function () {
@@ -623,7 +644,7 @@ let Intersection = function (a, b) {
 };
 
 Intersection.prototype.emit = function () {
-	return "max(" + this.a.emit() + ", " + this.b.emit() + ")";
+	return "opIntersection(" + this.a.emit() + ", " + this.b.emit() + ")";
 }
 
 Intersection.prototype.emit_decl = function () {
@@ -648,7 +669,7 @@ let Substraction = function (a, b) {
 };
 
 Substraction.prototype.emit = function () {
-	return "max(-" + this.a.emit() + ", " + this.b.emit() + ")";
+	return "opSubtract(" + this.a.emit() + ", " + this.b.emit() + ")";
 }
 
 Substraction.prototype.emit_decl = function () {
@@ -676,7 +697,7 @@ let SmoothUnion = function (a, b, k) {
 SmoothUnion.prototype = new SceneNode();
 
 SmoothUnion.prototype.emit = function () {
-	return "smin(" + this.a.emit() + ", " + this.b.emit() + ", " + this.k.emit() + ")";
+	return "opSmoothUnion(" + this.a.emit() + ", " + this.b.emit() + ", " + this.k.emit() + ")";
 };
 
 SmoothUnion.prototype.emit_decl = function () {

@@ -50,11 +50,12 @@
 	let obj1 = new objs.Sphere(new objs.Vec3(-1, 0, 0), 1.2);
 	//let obj2 = new objs.Sphere(new objs.Vec3(1, 0, 0), 1.2);
 	//let obj2 = new objs.RoundBox(new objs.Vec3(1, 0, 0), new objs.Vec3(0.8, 0.8, 0.8), 0.1);
-	let obj2 = new objs.Capsule(new objs.Vec3(1, 0, 0), new objs.Vec3(1, 1, 0));
+	let obj2 = new objs.Box(new objs.Vec3(1.0, -0.8, 1.0), new objs.Vec3(0.2, 0.2, 0.2));
 	let ground = new objs.Plane(new objs.Vec3(0, 1, 0), 1.0);
 	//let ground = new objs.RoundBox(new objs.Vec3(1, 0, 0), new objs.Vec3(0.8, 0.8, 0.8), 0.1);
+	let obj3 = new objs.Capsule(new objs.Vec3(1, 0, 0), new objs.Vec3(1, 1, 0));
 
-	let scene = new objs.Union(new objs.SmoothUnion(obj1, obj2), ground);
+	let scene = new objs.Union(new objs.Union(new objs.SmoothUnion(obj1, obj3), obj2), ground);
 
 	let fs_source = glsl`
 		precision highp float;
@@ -62,6 +63,8 @@
 
 		uniform float time;
 		uniform vec2 resolution;
+		uniform float matTexSize;
+		uniform sampler2D uMatSampler;
 
 		${ scene.emit_decl() }
 
@@ -90,13 +93,20 @@
 		#pragma glslify: sdCappedCylinder	= require('glsl-sdf-primitives/sdCappedCylinder')
 
 		// OPS
-		#pragma glslify: opU = require('glsl-sdf-ops/union' )
+		#pragma glslify: opUnion = require('glsl-sdf-ops/union' )
+		#pragma glslify: opIntersection = require('glsl-sdf-ops/intersection' )
+		#pragma glslify: opSubtract = require('glsl-sdf-ops/subtraction' )
 		#pragma glslify: calcAO = require('glsl-sdf-ops/ao', map = scene )
 		#pragma glslify: softshadow = require('glsl-sdf-ops/softshadow', map = scene )
 
+		vec2 opSmoothUnion(vec2 a, vec2 b, float k)
+		{
+			return vec2(smin(a.x, b.x, k), a.y);
+		}
+
 		vec2 scene(vec3 p)
 		{
-			return vec2(${ scene.emit() }, 0.0);
+			return ${ scene.emit() };
 		}
 
 		vec3 lighting( vec3 pos, vec3 nor, vec3 ro, vec3 rd) {
@@ -140,7 +150,7 @@
 				vec3 pos = ro + rd * t.x;
 				vec3 nor = normal(pos);
 
-				color = lighting(pos, nor, ro, rd);
+				color = lighting(pos, nor, ro, rd) * texture2D(uMatSampler, vec2(t.y / matTexSize, 0)).rgb;
 			}
 
 			gl_FragColor = vec4(color, 1.0);
@@ -216,7 +226,45 @@
 
 	gl.uniform2f(loc_u_resolution, canvas.width, canvas.height);
 
+	const matTexSize = 512;
+	let matTexData = new Uint8Array(matTexSize * 4);
+	let matTexDataDirty = false;
+
+	let matTex = gl.createTexture();
+	gl.bindTexture(gl.TEXTURE_2D, matTex);
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, matTexSize, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, matTexData);
+	
+	// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+	let matTexLoc = gl.getUniformLocation(program, "uMatSampler");
+	let matTexSizeLoc = gl.getUniformLocation(program, "matTexSize");
+
+	gl.activeTexture(gl.TEXTURE0);
+	gl.uniform1i(matTexLoc, 0);
+	gl.uniform1f(matTexSizeLoc, matTexSize);
+
 	let total_time = 0.0;
+
+	function clamp255(v)
+	{
+		return Math.min(Math.max(0, v * 255), 255);
+	}
+	function updateMaterial(id, color)
+	{
+		matTexData[id * 4] = clamp255(color[0]);
+		matTexData[id * 4 + 1] = clamp255(color[1]);
+		matTexData[id * 4 + 2] = clamp255(color[2]);
+		matTexData[id * 4 + 3] = clamp255(color[3]);
+		matTexDataDirty = true;
+	}
+
+	updateMaterial(0, [1, 0.3, 0.3, 1]);
+	updateMaterial(1, [0.3, 1, 0.3, 1]);
+	updateMaterial(2, [0.3, 0.3, 1, 1]);
+	updateMaterial(3, [0.3, 0.3, 1, 1]);
 
 	function render(timestamp)
 	{
@@ -227,9 +275,15 @@
 		gl.uniform1f(loc_u_time, total_time);
 
 		obj1.center.set(new objs.Vec3(-1 + 0.5 * Math.sin(total_time), 0, 0));
-		obj2.radius.set(0.2 + 0.1 * Math.sin(total_time));
+		obj3.radius.set(0.2 + 0.1 * Math.sin(total_time));
 
 		scene.upload_data(gl);
+
+		if (matTexDataDirty)
+		{
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, matTexSize, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, matTexData);
+			matTexDataDirty = false;
+		}
 
 		gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
 
